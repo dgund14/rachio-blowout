@@ -1,46 +1,52 @@
 import requests
-import json
 import time
 
+# get your key here https://rachio.readme.io/docs/authentication
 token = ""
 
-person = requests.get("https://api.rach.io/1/public/person/info", 
-    headers={"Authorization":token})
+sprinkler_duration_seconds = 2 * 60
+sleep_seconds = 4 * 60
+runs_per_zone = 3
+headers = {
+    "Content-Type": "application/json",
+    "Authorization": token
+}
+zone_start_payload = {
+    "id": id,
+    "duration": sprinkler_duration_seconds
+}
 
-person_id = person.json().get("id")
-print(f'Person: {id_id}')
-r = requests.get(f'https://api.rach.io/1/public/person/{person_id}', 
-    headers={"Authorization":token})
-json = json.loads(r.text)
-exit
-print(r.json().get("username"))
-devices = r.json().get("devices")
+
+def get_person_id():
+    p = requests.get("https://api.rach.io/1/public/person/info",
+                     headers=headers)
+    return p.json().get("id")
+
+
+def get_devices(person_id):
+    r = requests.get(
+        f'https://api.rach.io/1/public/person/{person_id}', headers=headers)
+    print(r.json().get("username"))
+    return r.json().get("devices")
+
 
 def start(id):
     url = "https://api.rach.io/1/public/zone/start"
-    payload = {
-        "id": id,
-        "duration": 120
-    }
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": token
-    }
-    requests.request("PUT", url, json=payload, headers=headers)
+    requests.request("PUT", url, json=zone_start_payload, headers=headers)
 
 
-for device in devices:
-    print(f'{device.get("name")} - {device.get("id")}')
-    zones = device.get("zones")
-    for zone in zones:
+person_id = get_person_id()
+
+for device in get_devices(person_id):
+    for zone in device.get("zones"):
         if (zone.get("enabled")):
-            for i in range(3):
-                id = zone.get("id")
-                name = zone.get("name")
-                print(f'Starting run {i} - {name} for 2 minutes...')
-                start(id)
-                time.sleep(2 * 60)
-                print("Sleeping for 4 minutes...")
-                #TODO: Don't sleep on the last run
-                time.sleep(4 * 60)
-    print('Run completed!')
+            for i in range(runs_per_zone):
+                print(
+                    f'Starting #{i + 1} on {zone.get("name")} for {sprinkler_duration_seconds / 60} minutes.')
+                start(zone.get("id"))
+                time.sleep(sprinkler_duration_seconds)
+                if (i + 1 == runs_per_zone):
+                    print("Run complete!")
+                else:
+                    print(f'Sleeping for {sleep_seconds / 60} minutes.')
+                    time.sleep(4 * 60)
