@@ -4,7 +4,7 @@ import time
 # get your key here https://rachio.readme.io/docs/authentication
 token = ""
 
-sprinkler_duration_seconds = 2 * 60
+sprinkler_duration_seconds = 90
 sleep_seconds = 4 * 60
 runs_per_zone = 3
 headers = {
@@ -37,7 +37,14 @@ def start(id):
 person_id = get_person_id()
 
 for device in get_devices(person_id):
-    for zone in device.get("zones"):
+    zones = device.get("zones")
+    zone_count = 0
+    for zone in zones:
+        if (zone.get("enabled")):
+            zone_count = zone_count + 1
+    total_runtime_seconds = zone_count * (sprinkler_duration_seconds + sleep_seconds) * runs_per_zone
+    print(f'Estimated time for {zone_count} zones: {total_runtime_seconds / 60} minutes')
+    for zone in zones:
         if (zone.get("enabled")):
             for i in range(runs_per_zone):
                 print(
