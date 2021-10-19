@@ -11,10 +11,6 @@ headers = {
     "Content-Type": "application/json",
     "Authorization": token
 }
-zone_start_payload = {
-    "id": id,
-    "duration": sprinkler_duration_seconds
-}
 
 
 def get_person_id():
@@ -32,7 +28,10 @@ def get_devices(person_id):
 
 def start(id):
     url = "https://api.rach.io/1/public/zone/start"
-    requests.request("PUT", url, json=zone_start_payload, headers=headers)
+    requests.request("PUT", url, json={
+        "id": id,
+        "duration": sprinkler_duration_seconds
+    }, headers=headers)
 
 
 person_id = get_person_id()
