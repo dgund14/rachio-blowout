@@ -42,17 +42,23 @@ for device in get_devices(person_id):
     for zone in zones:
         if (zone.get("enabled")):
             zone_count = zone_count + 1
-    total_runtime_seconds = zone_count * (sprinkler_duration_seconds + sleep_seconds) * runs_per_zone
-    print(f'Estimated time for {zone_count} zones: {total_runtime_seconds / 60} minutes')
+    total_runtime_seconds = zone_count * \
+        (sprinkler_duration_seconds + sleep_seconds) * runs_per_zone
+    print(
+        f'Estimated time for {zone_count} zones: {total_runtime_seconds / 60} minutes')
     for zone in zones:
+        current_zone_count = 0
         if (zone.get("enabled")):
+            current_zone_count = current_zone_count + 1
             for i in range(runs_per_zone):
                 print(
-                    f'Starting #{i + 1} on {zone.get("name")} for {sprinkler_duration_seconds / 60} minutes.')
+                    f'(Zone {current_zone_count}/{zone_count}) Starting {i + 1}/{runs_per_zone} on {zone.get("name")} for {sprinkler_duration_seconds / 60} minutes.')
                 start(zone.get("id"))
                 time.sleep(sprinkler_duration_seconds)
-                if (i + 1 == runs_per_zone):
-                    print("Run complete!")
-                else:
+                if (i + 1 != runs_per_zone and zone_count != current_zone_count):
                     print(f'Sleeping for {sleep_seconds / 60} minutes.')
-                    time.sleep(4 * 60)
+                    time.sleep(sleep_seconds)
+                if (i + 1 == runs_per_zone):
+                    print(
+                        f'{runs_per_zone} run{"" if runs_per_zone == 1 else "s"} completed for {zone.get("name")}!')
+            print('All zones completed!')
